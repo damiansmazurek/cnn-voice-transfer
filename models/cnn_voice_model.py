@@ -21,19 +21,19 @@ class CNNSoundTransferModel:
 
         # Generator model initialization
         self.content_optimizer = Adam(lr=0.002, beta_1=0.5, decay=8e-8)
-        self.style_optimizer = Adam(lr=0.002, beta_1=0.5, decay=8e-8)
+        self.style_optimizer = Adam(lr=0.0002, beta_1=0.5, decay=8e-8)
         self.g_model = self.__generator(self.gen_output_model_path)
-        self.g_model.compile(loss='binary_crossentropy', optimizer=self.optimizer)
+        self.g_model.compile(loss='binary_crossentropy', optimizer=self.content_optimizer)
 
         # Style content model initialization
         self.d_content_optimizer = Adam(lr=0.02)
         self.d_content_model = self.__discriminator(self.disc_output_content_model_path)
-        self.d_content_model.compile(loss='binary_crossentropy', optimizer=self.d_optimizer,metrics=['accuracy'])
+        self.d_content_model.compile(loss='binary_crossentropy', optimizer=self.d_content_optimizer,metrics=['accuracy'])
         
         # Style dyscriminator model initialization
-        self.d_style_optimizer = Adam(lr=0.002)
+        self.d_style_optimizer = Adam(lr=0.02)
         self.d_style_model = self.__discriminator(self.disc_output_style_model_path)
-        self.d_style_model.compile(loss='binary_crossentropy', optimizer=self.d_optimizer,metrics=['accuracy'])
+        self.d_style_model.compile(loss='binary_crossentropy', optimizer=self.d_style_optimizer,metrics=['accuracy'])
 
         # Stack content model
         self.stack_content_model = Sequential()
@@ -74,7 +74,7 @@ class CNNSoundTransferModel:
 
     def __generator(self, path):
         model = Sequential()
-        model.add(Dense(256, input_shape=(self.height,)))
+        model.add(Dense(256, input_shape=(self.width, self.height, self.channels)))
         model.add(LeakyReLU(alpha=0.2))
         model.add(BatchNormalization(momentum=0.8))
         model.add(Dense(512))
@@ -92,15 +92,19 @@ class CNNSoundTransferModel:
 
     def train(self, X_content_train, X_style_train, epochs=20000, batch = 1, save_interval = 100, save_callback= None):
         for cnt in range(epochs):
+            random_index = 0
 
             ## Prepare training datasets
-            random_index = np.random.randint(0, len(X_content_train) - np.int64(batch))
+            if len(X_content_train) != 1:
+                random_index = np.random.randint(0, len(X_content_train) - np.int64(batch))
+          
             legit_content_data = X_content_train[random_index : random_index + np.int64(batch)].reshape(np.int64(batch), self.width, self.height, self.channels)
             legit_style_data = X_style_train[random_index : random_index + np.int64(batch)].reshape(np.int64(batch), self.width, self.height, self.channels)
+       
             
             # Generating fake data
             # Learn model to generate from content data
-            gen_noise = legit_content_data[0]
+            gen_noise = legit_content_data
             fake_data = self.g_model.predict(gen_noise)
 
             # Creating combined dataset for content

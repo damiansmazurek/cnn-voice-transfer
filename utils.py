@@ -1,3 +1,4 @@
+import os
 import librosa
 import numpy as np
 from logging import log, info, debug, basicConfig, DEBUG, INFO, error
@@ -54,7 +55,7 @@ def download_model(model_bucket_name, model_name, model_local_path):
         storage_client = storage.Client()
         bucket = storage_client.bucket(model_bucket_name)
         secure_download_single_blob(bucket, model_name + ModelsSufix.DICSR_CONT,model_local_path + ModelsSufix.DICSR_CONT)
-        secure_download_single_blob(bucket, model_name + ModelsSufix.DICSR_STYLE,model_local_path + ModeslSufix.DICSR_STYLE)
+        secure_download_single_blob(bucket, model_name + ModelsSufix.DICSR_STYLE,model_local_path + ModelsSufix.DICSR_STYLE)
         secure_download_single_blob(bucket, model_name + ModelsSufix.GEN,model_local_path + ModelsSufix.GEN)
     except NotFound:
         error('No model repository found.')
@@ -79,6 +80,11 @@ def upload_blob_to_bucket(filepath, outpu_bucket_name ):
     bucket = storage_client.bucket(outpu_bucket_name)
     blob = bucket.blob(destination_blob_name)
     blob.upload_from_filename(source_file_name)
+
+def prepare_local_path(path):
+    if not os.path.exists(path):
+        info('Path %s not existing - creating directory'%(path))
+        os.makedirs(path)
 
 class ModelsSufix:
     GEN = '/gen.h5'

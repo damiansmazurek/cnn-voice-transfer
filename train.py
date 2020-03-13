@@ -14,7 +14,7 @@ class TrainingController:
         info('Uploading model to bucket %s'%(self.model_bucket))
         upload_model(self.model_bucket, self.model_blob_path, model_path_disc, model_path_gen)
 
-    def load_and_fft_dataset(self, training_set_path, sample_number):
+    def load_and_fft_dataset(self, training_set_path, sample_number, N_FFT):
         train_data = []
         sr_lists = []
         for filename in os.listdir(training_set_path):
@@ -27,29 +27,28 @@ class TrainingController:
             debug("SR", sr)
             sr_lists.append(sr)       
         width = len(train_data[0])
-        info("Setting data size to: %d x %d x %d", width,height,channels)
         train_data = normalize_spectrums(train_data,width,sample_number)
         train_data_norm= np.asarray(train_data)
-        return width, train_data, sr_lists
+        return width, train_data_norm, sr_lists
 
     def train(self, training_content_set_path, training_style_set_path, N_FFT, model_path, epochs=1000, batch=4, save_interval=100, sample_number = 1025):
         
         #Open files and fft them
         info('Training started')
-        c_width, c_training_data, c_sr = self.load_and_fft_dataset(training_content_set_path,sample_number)
-        s_width, s_training_data, s_sr = self.load_and_fft_dataset(training_style_set_path,sample_number)
+        c_width, c_training_data, c_sr = self.load_and_fft_dataset(training_content_set_path,sample_number, N_FFT)
+        s_width, s_training_data, s_sr = self.load_and_fft_dataset(training_style_set_path,sample_number, N_FFT)
 
         # Set parameters for model
-        width = len(train_data[0])
-        height = max_height
+        info('C_width %d and S_width %d'%(c_width, s_width))
+        width = c_width
         channels = 1
 
         # Check if batch is not bigger then training set.
-        if batch > len(train_data):
-            batch = len(train_data)
+        if batch > len(c_training_data):
+            batch = len(c_training_data)
             info('Batch is bigger then dataset sample, changing batch size to %d'%(batch))
 
-        gan = CNNSoundTransferModel(width,height,channels,model_path)
+        gan = CNNSoundTransferModel(width,sample_number,channels,model_path)
 
         #train model
         info("Start training")
@@ -57,7 +56,7 @@ class TrainingController:
         if self.model_bucket != None:
             info('Exporting models mode to GCP bucket is turned on')
             save_bucket_callback = self.save_callback
-        gan.train(train_data_norm,epochs, batch, save_interval, discr_epoch_mul, save_bucket_callback)
+        gan.train(c_training_data, s_training_data, epochs, batch, save_interval, save_bucket_callback)
 
     def generate(self, model_path, content_path, otputfile, N_FFT, sample_number = 1025, sr = 22050):
         # TODO: Add no model found exception here

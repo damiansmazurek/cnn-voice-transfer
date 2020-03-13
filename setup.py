@@ -1,7 +1,7 @@
 import os
 import logging
 from train import TrainingController
-from utils import download_blobs, download_model, upload_blob_to_bucket, upload_model
+from utils import download_blobs, download_model, upload_blob_to_bucket, upload_model, prepare_local_path
 
 # APP AND HYPERPARAMETERS CONFIGURATION
 
@@ -16,8 +16,7 @@ SAMPLE_NUMBER = int(os.getenv('SAMPLE_NUMBER'))
 
 # Path to directory, where model will be saved
 MODEL_OUTPUT= os.getenv('MODEL_OUTPUT')
-if not os.path.exists(MODEL_OUTPUT):
-    os.makedirs(MODEL_OUTPUT)
+prepare_local_path(MODEL_OUTPUT)
 
 # Log level (if set to debug - debug log level on, esle info level log is set)
 LOG_LEVEL = os.getenv('LOG_LEVEL')
@@ -43,22 +42,22 @@ training_controller = TrainingController(MODEL_BUCKET, MODEL_NAME)
 
 # Run specyfic functionality based on global command
 if CMD == 'train':
-    DISCR_EPOCH_MUL = int(os.getenv('DISCR_EPOCH_MUL'))
-    TRAINING_SET_PATH= os.getenv('TRAINING_SET_PATH')
-    if not os.path.exists(TRAINING_SET_PATH):
-        os.makedirs(TRAINING_SET_PATH)
+    TRAINING_CONTENT_SET_PATH =  os.getenv('TRAINING_CONTENT_SET_PATH')
+    prepare_local_path(TRAINING_CONTENT_SET_PATH)
+    TRAINING_STYLE_SET_PATH =  os.getenv('TRAINING_STYLE_SET_PATH')
+    prepare_local_path(TRAINING_STYLE_SET_PATH)
     EPOCH = int(os.getenv('EPOCH'))
     BATCH_SIZE = int(os.getenv('BATCH_SIZE'))
     SAVE_INTERVAL = int(os.getenv('SAVE_INTERVAL'))
+    
     # Download samples from GCP Storage
-    TRAINING_SET_BUCKET = os.getenv('TRAINING_SET_BUCKET')
-    if TRAINING_SET_BUCKET != 'none':
-        download_blobs(TRAINING_SET_BUCKET,TRAINING_SET_PATH)
+    #TRAINING_SET_BUCKET = os.getenv('TRAINING_SET_BUCKET')
+    #if TRAINING_SET_BUCKET != 'none':
+    #    download_blobs(TRAINING_SET_BUCKET,TRAINING_SET_PATH)
 
-    training_controller.train(TRAINING_SET_PATH, N_FFT, MODEL_OUTPUT, EPOCH, BATCH_SIZE, SAVE_INTERVAL, SAMPLE_NUMBER, DISCR_EPOCH_MUL)
+    training_controller.train(TRAINING_CONTENT_SET_PATH, TRAINING_STYLE_SET_PATH , N_FFT, MODEL_OUTPUT, EPOCH, BATCH_SIZE, SAVE_INTERVAL, SAMPLE_NUMBER)
 
 else:
     OUTPUT_FILE = os.getenv('OUTPUT_FILE')
-    if not os.path.exists(OUTPUT_FILE):
-        os.makedirs(OUTPUT_FILE)
+    prepare_local_path(OUTPUT_FILE)
     training_controller.generate(MODEL_OUTPUT,OUTPUT_FILE,N_FFT,SAMPLE_NUMBER)

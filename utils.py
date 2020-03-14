@@ -67,13 +67,16 @@ def secure_download_single_blob(bucket, blob_path, local_path):
     else:
         error('Blob %s not exists'%(blob_path))
 
-def upload_model(model_bucket, model_blob_path, model_path_disc, model_path_gen):
+def upload_model(model_bucket, model_blob_path, model_content_path_disc, model_style_path_disc, model_path_gen):
     storage_client = storage.Client()
     bucket = storage_client.bucket(model_bucket)
-    blob_disc = bucket.blob(model_blob_path + ModelsSufix.DICSR)
-    blob_gen = bucket.blob(model_blob_path + ModelsSufix.GEN)
-    blob_gen.upload_from_filename(model_path_gen)
-    blob_disc.upload_from_filename(model_path_disc)
+    upload_single_model(bucket,model_blob_path + ModelsSufix.DICSR_CONT, model_content_path_disc)
+    upload_single_model(bucket,model_blob_path + ModelsSufix.DICSR_STYLE, model_style_path_disc)
+    upload_single_model(bucket,model_blob_path + ModelsSufix.GEN, model_path_gen)
+
+def upload_single_model(bucket, bucket_path, local_path):
+    blob = bucket.blob(bucket_path)
+    blob.upload_from_filename(local_path)
 
 def upload_blob_to_bucket(filepath, outpu_bucket_name ):
     storage_client = storage.Client()

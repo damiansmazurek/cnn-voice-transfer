@@ -10,9 +10,9 @@ class TrainingController:
         self.model_bucket = model_bucket
         self. model_blob_path = model_blob_path
 
-    def save_callback(self, model_path_gen, model_path_disc):
+    def save_callback(self, model_path_gen, model_content_path_disc, model_style_path_disc):
         info('Uploading model to bucket %s'%(self.model_bucket))
-        upload_model(self.model_bucket, self.model_blob_path, model_path_disc, model_path_gen)
+        upload_model(self.model_bucket, self.model_blob_path, model_content_path_disc, model_style_path_disc, model_path_gen)
 
     def load_and_fft_dataset(self, training_set_path, sample_number, N_FFT):
         train_data = []
@@ -68,4 +68,3 @@ class TrainingController:
             sp_data= np.squeeze(single_data)
             plot_spectrum(sp_data,'gen_spec_all_%d.png'%(spec_num))
             spect2wav(sp_data, sr, otputfile+'/gen_music_%d.wav'%(spec_num), N_FFT)
-

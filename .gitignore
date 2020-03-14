@@ -127,3 +127,15 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+boy-sample copy.wav.png
+boy-sample.wav.png
+girl-sample copy.wav.png
+girl-sample.wav.png
+prepare_env.sh
+MODEL_OUTPUT/desc_con.h5
+MODEL_OUTPUT/desc_style.h5
+MODEL_OUTPUT/gen.h5
+training_content_set/boy-sample copy.wav
+training_content_set/boy-sample.wav
+training_style_set/girl-sample copy.wav
+training_style_set/girl-sample.wav

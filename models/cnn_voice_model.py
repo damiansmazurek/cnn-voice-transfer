@@ -131,7 +131,7 @@ class CNNSoundTransferModel:
         info('Models saved locally....')
         if callback != None:
             info('Start uploading models to cloud...')
-            callback(self.gen_output_model_path, self.disc_output_content_model_path)        
+            callback(self.gen_output_model_path, self.disc_output_content_model_path, self.disc_output_style_model_path)        
 
     
     def __label_smoothing(self, labels, smoothing_factor):

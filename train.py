@@ -61,7 +61,7 @@ class TrainingController:
     def generate(self, model_path, content_path, otputfile, N_FFT, sample_number = 1025, sr = 22050):
         # TODO: Add no model found exception here
         gan = tf.keras.models.load_model(model_path + ModelsSufix.GEN)
-        c_w, content_inputs, sr = self.load_and_fft_dataset(content_path,sample_number)
+        c_w, content_inputs, sr = self.load_and_fft_dataset(content_path,sample_number, N_FFT)
         spectrums = gan.predict(content_inputs) 
         spec_num = 0
         for single_data in spectrums:

@@ -25,7 +25,6 @@ class CNNSoundTransferModel:
         self.style_optimizer = Adam(lr=0.0002, beta_1=0.5, decay=8e-8)
         self.g_model = self.__generator(self.gen_output_model_path)
         self.g_model.compile(loss='binary_crossentropy', optimizer=self.content_optimizer)
-
         # Content dyscriminator model initialization
         info('Content dyscriminator model initialization')
         self.d_content_optimizer = Adam(lr=0.02)
@@ -51,28 +50,30 @@ class CNNSoundTransferModel:
         self.stack_style_model.compile(loss='binary_crossentropy', optimizer=self.style_optimizer)
 
     def __discriminator(self, path):
-        model = Sequential()
-        model.add(GaussianNoise(1.5, input_shape=(self.width, self.height, self.channels) ))
-        model.add(Conv2D(filters=128, kernel_size=(3, 3), padding='same'))
-        model.add(LeakyReLU(alpha=0.2))
-        model.add(Dropout(0.25))
-        model.add(Flatten())
-        model.add(Dense(1, activation='sigmoid'))
+        model = Sequential([
+            GaussianNoise(1.5, input_shape=(self.width, self.height, self.channels) ),
+            Conv2D(filters=128, kernel_size=(3, 3), padding='same'),
+            LeakyReLU(alpha=0.2),
+            MaxPool2D(2,2),
+            Dropout(0.25),
+            Flatten(),
+            Dense(255, activation='relu'),
+            Dense(1, activation='sigmoid')
+        ])
         if os.path.exists(path):
             info("Loading discriminator weights.")
             model.load_weights(path)
         return model
 
     def __generator(self, path):
-        model = Sequential()
-        model.add(Conv2D(filters=128, kernel_size=(5, 5), strides= (3,3), padding='same', input_shape=(self.width, self.height, self.channels)))
-        model.add(LeakyReLU(alpha=0.2))
-        model.add(Flatten())
-        model.add(Dense(512))
-        model.add(LeakyReLU(alpha=0.2))
-        model.add(BatchNormalization(momentum=0.8))
-        model.add(Dense(self.width  * self.height * self.channels, activation='tanh'))
-        model.add(Reshape((self.width, self.height, self.channels)))
+        model = Sequential([Conv2D(filters=128, kernel_size=(5, 5), strides= (3,3), padding='same', input_shape=(self.width, self.height, self.channels)),
+        LeakyReLU(alpha=0.2),
+        MaxPool2D(2,2),
+        BatchNormalization(momentum=0.8),
+        Dense(5012, activation = 'relu'),
+        Dense(self.width  * self.height * self.channels, activation='tanh'),
+        Reshape((self.width, self.height, self.channels))
+        ])
         if os.path.exists(path):
             info("Loading generator weights.")
             model.load_weights(path)

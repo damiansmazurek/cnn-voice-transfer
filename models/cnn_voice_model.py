@@ -70,6 +70,7 @@ class CNNSoundTransferModel:
         LeakyReLU(alpha=0.2),
         MaxPool2D(2,2),
         BatchNormalization(momentum=0.8),
+        Flatten(),
         Dense(5012, activation = 'relu'),
         Dense(self.width  * self.height * self.channels, activation='tanh'),
         Reshape((self.width, self.height, self.channels))
